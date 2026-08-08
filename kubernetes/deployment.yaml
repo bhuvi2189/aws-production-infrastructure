@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: weather-analytics
-          image: 530540751236.dkr.ecr.ap-south-1.amazonaws.com/weather-analytics:1094f903a036a464ff4bcebdd6c0578cc2b41a33
+          image: 530540751236.dkr.ecr.ap-south-1.amazonaws.com/weather-analytics:e811ad8bd653fa2a2332c336a48e43a7dc2d100b
           ports:
             - containerPort: 80
           resources:
