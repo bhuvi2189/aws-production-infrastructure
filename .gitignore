@@ -12,3 +12,7 @@ crash.*.log
 .env.*
 *.pem
 *.key
+weather-analytics/.env
+
+downloads
+downloads.pub
