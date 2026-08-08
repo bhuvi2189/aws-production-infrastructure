@@ -36,14 +36,15 @@ jobs:
           docker build \
             -t $ECR_REPOSITORY:${GITHUB_SHA} \
             ./weather-analytics
+
       - name: Trivy Security Scan
         uses: aquasecurity/trivy-action@master
         with:
-        image-ref: weather-analytics:${{ github.sha }}
-        format: table
-        severity: CRITICAL,HIGH
-        ignore-unfixed: true
-        exit-code: 1
+          image-ref: weather-analytics:${{ github.sha }}
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: 1
 
       - name: Tag Docker image
         run: |
