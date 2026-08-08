@@ -35,7 +35,7 @@ jobs:
         run: |
           docker build \
             -t $ECR_REPOSITORY:${GITHUB_SHA} \
-            ../weather-analytics-dashboard
+            ./weather-analytics
 
       - name: Tag Docker image
         run: |
