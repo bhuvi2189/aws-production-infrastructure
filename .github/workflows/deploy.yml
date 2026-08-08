@@ -1,4 +1,4 @@
-name: Build and Deploy to EKS
+name: Build and Deploy with GitOps
 
 on:
   push:
@@ -7,15 +7,14 @@ on:
 
 permissions:
   id-token: write
-  contents: read
+  contents: write
 
 env:
   AWS_REGION: ap-south-1
   ECR_REPOSITORY: weather-analytics
-  EKS_CLUSTER_NAME: production-eks
 
 jobs:
-  deploy:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,7 +25,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::530540751236:role/GitHubActionsEKSRole
-          aws-region: ap-south-1
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
@@ -57,17 +56,21 @@ jobs:
           docker push \
             530540751236.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${GITHUB_SHA}
 
-      - name: Update kubeconfig
+      - name: Update Kubernetes manifest
         run: |
-          aws eks update-kubeconfig \
-            --region $AWS_REGION \
-            --name $EKS_CLUSTER_NAME
+          sed -i "s#image: .*weather-analytics:[^[:space:]]*#image: 530540751236.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${GITHUB_SHA}#" kubernetes/deployment.yaml
 
-      - name: Deploy to EKS
+      - name: Commit and push manifest
         run: |
-          kubectl apply -f kubernetes/service.yaml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          kubectl set image deployment/weather-analytics \
-            weather-analytics=530540751236.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${GITHUB_SHA}
+          git add kubernetes/deployment.yaml
 
-          kubectl rollout status deployment/weather-analytics
+          if git diff --cached --quiet; then
+            echo "No manifest changes"
+            exit 0
+          fi
+
+          git commit -m "chore: update weather-analytics image to ${GITHUB_SHA}"
+          git push
